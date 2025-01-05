@@ -9,10 +9,9 @@ import lombok.Builder;
  **/
 
 @Builder
-public record PaymentDTO(
-        float vehiclePrice,
-        String financingFactor,
-        int monthlyPayment,
-        float toPayEveryMonth
+public record ErrorDTO(
+        String message,
+        String response,
+        String timestamp
 ) {
 }

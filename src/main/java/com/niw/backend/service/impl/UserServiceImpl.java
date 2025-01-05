@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
                     .map(userMapper::toDto)
                     .orElseThrow(() -> new RuntimeException("User not found"));
         } catch (Exception e) {
-            throw new RuntimeException("User not found");
+            throw new CustomEntityNotFoundException(className.getSimpleName(), id);
         }
     }
 

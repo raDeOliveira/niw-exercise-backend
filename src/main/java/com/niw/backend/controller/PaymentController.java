@@ -48,5 +48,4 @@ public class PaymentController {
         return new ResponseEntity<>(paymentService.saveAndExportData(user), HttpStatus.OK);
     }
 
-    // NOTE - add endpoint to save payment
 }

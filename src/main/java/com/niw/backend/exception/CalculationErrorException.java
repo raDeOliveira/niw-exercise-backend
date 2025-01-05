@@ -1,5 +1,6 @@
 package com.niw.backend.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,11 +12,11 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DatabaseAccessException extends RuntimeException {
+@AllArgsConstructor
+public class CalculationErrorException extends RuntimeException {
 
-    public DatabaseAccessException(Throwable e) {
-        super("Error accessing the database", e);
+    public CalculationErrorException(String error) {
+        super("Error on calculation: " + error);
     }
-
 
 }

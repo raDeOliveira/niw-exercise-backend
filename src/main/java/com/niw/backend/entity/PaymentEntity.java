@@ -24,13 +24,13 @@ public class PaymentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
-    @Column(name = "to_pay_every_month")
-    private float toPayEveryMonth;
     @Column(name = "vehicle_price")
     private float vehiclePrice;
     @Column(name = "financing_factor")
     private String financingFactor;
     @Column(name = "monthly_payment")
     private int monthlyPayment;
+    @Column(name = "to_pay_every_month")
+    private float toPayEveryMonth;
 
 }

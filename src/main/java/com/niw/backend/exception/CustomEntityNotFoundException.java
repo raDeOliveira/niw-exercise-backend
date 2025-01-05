@@ -5,11 +5,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @project: backend-imechanic
- * @author: raDeOliveira
- * @date: 1/29/2024
- * @time: 11:04 AM
- */
+ * @project: niw-java-exercise
+ * @author: raOliveira
+ * @time: 6:35 PM
+ **/
 
 @EqualsAndHashCode(callSuper = true)
 @Data

@@ -5,6 +5,7 @@ import com.niw.backend.dto.PaymentDTO;
 import com.niw.backend.dto.UserDTO;
 import com.niw.backend.entity.PaymentEntity;
 import com.niw.backend.entity.UserEntity;
+import com.niw.backend.exception.CalculationErrorException;
 import com.niw.backend.mapper.PaymentMapper;
 import com.niw.backend.mapper.UserMapper;
 import com.niw.backend.payload.response.PaymentResponse;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * @project: niw-java-exercise
@@ -51,8 +54,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     public PaymentResponse calculatePayment(@Valid PaymentDTO paymentDTO) {
-            float financingFactor = 0;
-            float toPayEveryMonth = 0;
+        float financingFactor = 0;
+        float toPayEveryMonth = 0;
         try {
             if (paymentDTO.financingFactor().equals("INTERNAL")) {
                 financingFactor = factorProperties.getInternal();
@@ -77,23 +80,35 @@ public class PaymentServiceImpl implements PaymentService {
             // reconvert payment entity to dto for response
             PaymentDTO dto = paymentMapper.toDto(paymentEntity);
 
-            return new PaymentResponse(
-                    toPayEveryMonth,
-                    financingFactor,
-                    dto.monthlyPayment(),
-                    dto.vehiclePrice()
-            );
+            // to remove f from float number result
+            BigDecimal result = new BigDecimal(Float.toString(toPayEveryMonth));
+            result = result.setScale(2, RoundingMode.HALF_UP);
+
+            return PaymentResponse.builder()
+                    .vehiclePrice(dto.vehiclePrice())
+                    .financingFactor(financingFactor)
+                    .monthlyPayment(dto.monthlyPayment())
+                    .toPayEveryMonth(result)
+                    .build();
+
         } catch (Exception e) {
-            log.error("Error on savePayment: {}", e.getMessage());
+            log.error("Error in calculation {}", e.getMessage());
             return null;
         }
     }
 
     // calculate formula
     private float calculate(float vehiclePrice, float financingFactor, float monthlyPayment) {
-        float calculateFactor = financingFactor / 100;
-        float result = vehiclePrice * calculateFactor;
-        result = (result + vehiclePrice) / monthlyPayment;
+        if (vehiclePrice == 0 || vehiclePrice < 0)
+            throw new CalculationErrorException("vehicle price must be greater than 0");
+        float result = 0;
+        try {
+            float calculateFactor = financingFactor / 100;
+            result = vehiclePrice * calculateFactor;
+            result = (result + vehiclePrice) / monthlyPayment;
+        } catch (Exception e) {
+            log.error("Error of calculation {}", e.getMessage());
+        }
         return result;
     }
 
@@ -132,6 +147,10 @@ public class PaymentServiceImpl implements PaymentService {
             fileWriter.flush();
             fileWriter.close();
         }
-        return new UserResponse(userDto.name(), userDto.email(), userDto.paymentDTO());
+        return UserResponse.builder()
+                .name(userDto.name())
+                .email(userDto.email())
+                .paymentDTO(userDto.paymentDTO())
+                .build();
     }
 }
