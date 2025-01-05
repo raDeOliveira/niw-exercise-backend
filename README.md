@@ -19,18 +19,18 @@ Backend API
 * Slf4j
 * Mapstruct
 
+## Run Application
+### Docker PostgreSQL
+Run docker-compose.yml inside project folder
+```
+docker compose up
+```
+
 ### Run Application
 To compile and run the application in development mode
 ```
 ./mvnw spring-boot:run
 ```
-
-### Docker compose
-Rune docker-compose.yml
-```
-docker compose up
-```
-
 ### Access the application
 - http://localhost:8080/api/
 
