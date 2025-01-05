@@ -7,7 +7,7 @@ package com.niw.backend.dto;
  **/
 
 public record UserDTO(
-        String username,
+        String name,
         String email,
         PaymentDTO paymentDTO
 ) {

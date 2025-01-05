@@ -39,9 +39,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO createUser(UserDTO userDto) {
-        Optional<UserEntity> userExist = userRepository.findByUsername(userDto.username());
+        Optional<UserEntity> userExist = userRepository.findByName(userDto.name());
         if (userExist.isPresent()) {
-            throw new AlreadyExistsException(userDto.username());
+            throw new AlreadyExistsException(userDto.name());
         }
         UserEntity user = userMapper.toEntity(userDto);
         UserEntity userSaved = userRepository.save(user);
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
                     .findById(id)
                     .orElseThrow(() -> new CustomEntityNotFoundException(className.getSimpleName(), id));
 
-            userExist.setUsername(userDto.username());
+            userExist.setName(userDto.name());
             userExist.setEmail(userDto.email());
         } catch (DataAccessException e) {
             databaseErrorAccess(e);

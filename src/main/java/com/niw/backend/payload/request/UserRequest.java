@@ -10,7 +10,7 @@ import com.niw.backend.dto.PaymentDTO;
  **/
 
 public record UserRequest(
-        String username,
+        String name,
         String email,
         PaymentDTO paymentDTO
 ) {

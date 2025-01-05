@@ -24,8 +24,8 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private int id;
-    @Column(name = "username")
-    private String username;
+    @Column(name = "name")
+    private String name;
     @Column(name = "email")
     private String email;
     // NOTE - add relationship to PaymentEntity

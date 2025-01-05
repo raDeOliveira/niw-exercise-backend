@@ -7,8 +7,7 @@ package com.niw.backend.payload.request;
  **/
 
 public record PaymentRequest(
-        float toPayEveryMonth,
-        float financingFactor,
+        String financingFactor,
         int monthlyPayment,
         float vehiclePrice
 ) {

@@ -7,9 +7,9 @@ package com.niw.backend.dto;
  **/
 
 public record PaymentDTO(
-        float toPayEveryMonth,
         String financingFactor,
         int monthlyPayment,
-        float vehiclePrice
+        float vehiclePrice,
+        float toPayEveryMonth
 ) {
 }

@@ -7,6 +7,7 @@ import com.niw.backend.entity.PaymentEntity;
 import com.niw.backend.entity.UserEntity;
 import com.niw.backend.mapper.PaymentMapper;
 import com.niw.backend.mapper.UserMapper;
+import com.niw.backend.payload.response.PaymentResponse;
 import com.niw.backend.payload.response.UserResponse;
 import com.niw.backend.repository.PaymentRepository;
 import com.niw.backend.repository.UserRepository;
@@ -49,54 +50,46 @@ public class PaymentServiceImpl implements PaymentService {
         this.factorProperties = factorProperties;
     }
 
-    @Override
-    public UserResponse calculatePayment(@Valid UserDTO userDto) {
-        try {
+    public PaymentResponse calculatePayment(@Valid PaymentDTO paymentDTO) {
             float financingFactor = 0;
-            float monthlyPayment = 0;
-
-            if (userDto.paymentDTO().financingFactor().equals("INTERNAL")) {
+            float toPayEveryMonth = 0;
+        try {
+            if (paymentDTO.financingFactor().equals("INTERNAL")) {
                 financingFactor = factorProperties.getInternal();
                 // calculate monthly payment
-                monthlyPayment = calculate(
-                        userDto.paymentDTO().vehiclePrice(),
+                toPayEveryMonth = calculate(
+                        paymentDTO.vehiclePrice(),
                         financingFactor,
-                        userDto.paymentDTO().monthlyPayment());
+                        paymentDTO.monthlyPayment());
 
-            } else if (userDto.paymentDTO().financingFactor().equals("EXTERNAL")) {
+            } else if (paymentDTO.financingFactor().equals("EXTERNAL")) {
                 financingFactor = factorProperties.getExternal();
                 // calculate monthly payment
-                monthlyPayment = calculate(
-                        userDto.paymentDTO().vehiclePrice(),
+                toPayEveryMonth = calculate(
+                        paymentDTO.vehiclePrice(),
                         financingFactor,
-                        userDto.paymentDTO().monthlyPayment());
+                        paymentDTO.monthlyPayment());
             }
 
             // convert payment dto to entity and save
-            PaymentEntity paymentEntity = paymentMapper.toEntity(userDto.paymentDTO());
-            paymentEntity.setToPayEveryMonth(monthlyPayment);
-            paymentEntity.setFinancingFactor(String.valueOf(financingFactor));
-            paymentRepository.save(paymentEntity);
-
-            // convert user dto to entity and save
-            UserEntity userEntity = userMapper.toEntity(userDto);
-            userEntity.setPaymentId(paymentEntity.getId());
-            userRepository.save(userEntity);
+            PaymentEntity paymentEntity = paymentMapper.toEntity(paymentDTO);
 
             // reconvert payment entity to dto for response
-            PaymentDTO paymentDTO = paymentMapper.toDto(paymentEntity);
+            PaymentDTO dto = paymentMapper.toDto(paymentEntity);
 
-            return new UserResponse(
-                    userDto.username(),
-                    userDto.email(),
-                    paymentDTO
+            return new PaymentResponse(
+                    toPayEveryMonth,
+                    financingFactor,
+                    dto.monthlyPayment(),
+                    dto.vehiclePrice()
             );
         } catch (Exception e) {
-            log.error("Error on calculatePayment: {}", e.getMessage());
+            log.error("Error on savePayment: {}", e.getMessage());
             return null;
         }
     }
 
+    // calculate formula
     private float calculate(float vehiclePrice, float financingFactor, float monthlyPayment) {
         float calculateFactor = financingFactor / 100;
         float result = vehiclePrice * calculateFactor;
@@ -104,35 +97,41 @@ public class PaymentServiceImpl implements PaymentService {
         return result;
     }
 
-    private void exportData() throws IOException {
+    public UserResponse saveAndExportData(UserDTO userDto) throws IOException {
+
+        // save data to database
+        PaymentEntity paymentEntity = paymentMapper.toEntity(userDto.paymentDTO());
+        paymentEntity.setToPayEveryMonth(paymentEntity.getToPayEveryMonth());
+        paymentEntity.setFinancingFactor(String.valueOf(paymentEntity.getFinancingFactor()));
+        paymentRepository.save(paymentEntity);
+
+        UserEntity userEntity = userMapper.toEntity(userDto);
+        userEntity.setPaymentId(paymentEntity.getId());
+        userRepository.save(userEntity);
+
         // export data to csv
         FileWriter fileWriter = new FileWriter("data.csv");
         try {
-            fileWriter.append("username,email,vehiclePrice,financingFactor,monthlyPayment,toPayEveryMonth\n");
-            userRepository.findAll().forEach(userEntity -> {
-                PaymentEntity paymentEntity = paymentRepository.findById(userEntity.getPaymentId()).get();
-                try {
-                    fileWriter.append(userEntity.getUsername())
-                            .append(",")
-                            .append(userEntity.getEmail())
-                            .append(",")
-                            .append(String.valueOf(paymentEntity.getVehiclePrice()))
-                            .append(",")
-                            .append(paymentEntity.getFinancingFactor())
-                            .append(",")
-                            .append(String.valueOf(paymentEntity.getMonthlyPayment()))
-                            .append(",")
-                            .append(String.valueOf(paymentEntity.getToPayEveryMonth()))
-                            .append("\n");
-                } catch (IOException e) {
-                    log.error("Error on exportData: {}", e.getMessage());
-                }
-            });
+            fileWriter.append("name,email,vehiclePrice,financingFactor,monthlyPayment,toPayEveryMonth\n");
+            fileWriter.append(userDto.name())
+                    .append(",")
+                    .append(userDto.email())
+                    .append(",")
+                    .append(String.valueOf(userDto.paymentDTO().vehiclePrice()))
+                    .append(",")
+                    .append(userDto.paymentDTO().financingFactor())
+                    .append(",")
+                    .append(String.valueOf(userDto.paymentDTO().monthlyPayment()))
+                    .append(",")
+                    .append(String.valueOf(userDto.paymentDTO().toPayEveryMonth()))
+                    .append("\n");
+
         } catch (Exception e) {
             log.error("Error on exportData: {}", e.getMessage());
         } finally {
             fileWriter.flush();
             fileWriter.close();
         }
+        return new UserResponse(userDto.name(), userDto.email(), userDto.paymentDTO());
     }
 }
