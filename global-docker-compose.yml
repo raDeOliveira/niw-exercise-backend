@@ -1,0 +1,51 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: niw_exercise
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  # Spring Boot application service
+  backend:
+    image: radeoliveira/backend
+    container_name: springboot-container
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/niw_exercise
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      - mynetwork
+
+  frontend:
+    image: radeoliveira/frontend
+    container_name: angular-container
+    build:
+      context: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
+
